@@ -469,6 +469,17 @@ var flatten = function(array) {
 // 31. Given a string, return an object containing tallies of each letter.
 // letterTally('potato'); // {p:1, o:2, t:2, a:1}
 var letterTally = function(str, obj) {
+  obj = obj || {};
+
+  obj[str[0]] = obj[str[0]] ? obj[str[0]] + 1 : 1;
+
+  if (str.length === 1) {
+    return obj;
+  } else {
+    letterTally(str.slice(1), obj);
+  }
+
+  return obj;
 };
 
 // 32. Eliminate consecutive duplicates in a list. If the list contains repeated
@@ -477,18 +488,53 @@ var letterTally = function(str, obj) {
 // compress([1,2,2,3,4,4,5,5,5]) // [1,2,3,4,5]
 // compress([1,2,2,3,4,4,2,5,5,5,4,4]) // [1,2,3,4,2,5,4]
 var compress = function(list) {
+  var result = [];
+  var index = 1;
+  if (list.length > 0) {
+    result.push(list[0]);
+    while (index < list.length && list[index] === result[0]) {
+      index++;
+    }
+    return result.concat(compress(list.slice(index)));
+  }
+  return result;
 };
 
 // 33. Augument every element in a list with a new value where each element is an array
 // itself.
 // augmentElements([[],[3],[7]], 5); // [[5],[3,5],[7,5]]
 var augmentElements = function(array, aug) {
+  var result = [];
+  if (array.length === 0) {
+    return [];
+  }
+  var first = array[0].slice();
+  first.push(aug);
+  result.push(first);
+  return result.concat(augmentElements(array.slice(1), aug));
 };
 
 // 34. Reduce a series of zeroes to a single 0.
 // minimizeZeroes([2,0,0,0,1,4]) // [2,0,1,4]
 // minimizeZeroes([2,0,0,0,1,0,0,4]) // [2,0,1,0,4]
 var minimizeZeroes = function(array) {
+  var result = [];
+  var index = 0;
+  if (array.length > 0) {
+    while (index < array.length && array[index] !== 0) {
+      result.push(array[index]);
+      index++;
+    }
+    if (index < array.length) {
+      result.push(array[index]);
+      index++;
+      while (index < array.length && array[index] === 0) {
+        index++;
+      }
+    }
+    return result.concat(minimizeZeroes(array.slice(index)));
+  }
+  return result;
 };
 
 // 35. Alternate the numbers in an array between positive and negative regardless of
@@ -496,12 +542,46 @@ var minimizeZeroes = function(array) {
 // alternateSign([2,7,8,3,1,4]) // [2,-7,8,-3,1,-4]
 // alternateSign([-2,-7,8,3,-1,4]) // [2,-7,8,-3,1,-4]
 var alternateSign = function(array) {
+  var result = [];
+  var len = array.length - 1;
+
+  if (array.length === 0) {
+    return result;
+  }  
+
+  if (array.length === 1) {
+    result.push(Math.max(array[0], -array[0]));    
+  } else if (array.length % 2 === 0) {
+    result.push(Math.min(array[len], -array[len]));
+  } else {
+    result.push(Math.max(array[len], -array[len]));
+  }
+
+  return alternateSign(array.slice(0, array.length - 1)).concat(result);
+
 };
 
 // 36. Given a string, return a string with digits converted to their word equivalent.
 // Assume all numbers are single digits (less than 10).
 // numToText("I have 5 dogs and 6 ponies"); // "I have five dogs and six ponies"
 var numToText = function(str) {
+  var intToStr = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+  var newStr = '';
+  var i = 0;
+
+  while (i < str.length && (str[i] < '0' || str[i] > '9')) {
+    newStr = newStr + str[i];
+    i++;
+  }
+
+  if (i < str.length) {
+    newStr = newStr + intToStr[+str[i]];
+    i++;
+  } else {
+    return newStr;
+  }
+
+  return newStr + numToText(str.slice(i));
 };
 
 
@@ -509,6 +589,18 @@ var numToText = function(str) {
 
 // 37. Return the number of times a tag occurs in the DOM.
 var tagCount = function(tag, node) {
+  node = node || document.body;
+  var count = 0;
+
+  if (node.tagName.toUpperCase() === tag.toUpperCase()) {
+    count++;
+  }
+
+  for (var i = 0; i < node.children.length; i++) {
+    count += tagCount(tag, node.children[i]); 
+  }
+
+  return count;
 };
 
 // 38. Write a function for binary search.
@@ -516,12 +608,53 @@ var tagCount = function(tag, node) {
 // binarySearch(array, 5) // 5
 // https://www.khanacademy.org/computing/computer-science/algorithms/binary-search/a/binary-search
 var binarySearch = function(array, target, min, max) {
+  min = (min === undefined) ? 0 : min;
+  max = (max === undefined) ? array.length - 1 : max;
+  var mid = Math.floor((min + max) / 2);
+
+  if (min > max) {
+    return null;
+  } else if (array[mid] === target) {
+    return mid;
+  } else if (array[mid] < target) {
+    return binarySearch(array, target, mid + 1, max);
+  } else {
+    return binarySearch(array, target, min, mid - 1);    
+  }
 };
 
 // 39. Write a merge sort function.
 // mergeSort([34,7,23,32,5,62]) // [5,7,23,32,34,62]
 // https://www.khanacademy.org/computing/computer-science/algorithms/merge-sort/a/divide-and-conquer-algorithms
 var mergeSort = function(array) {
+  //debugger;
+  var result = [];
+
+  if (array.length === 0) {
+    return result;
+  }
+  if (array.length === 1) {
+    result.push(array[0]);
+    return result;
+  }
+
+  var mid = Math.floor(array.length / 2);
+  var left = mergeSort(array.slice(0, mid));
+  var right = mergeSort(array.slice(mid, array.length ));
+  var i = 0;
+  var j = 0;
+
+  while (i < left.length || j < right.length) {
+    if (j === right.length || left[i] <= right[j]) {
+      result.push(left[i]);
+      i++;
+    } else if (i === left.length || left[i] > right[j]) {
+      result.push(right[j]);
+      j++;
+    }
+  }
+
+  return result;
 };
 
 // 40. Deeply clone objects and arrays.
@@ -530,4 +663,24 @@ var mergeSort = function(array) {
 // console.log(obj2); // {a:1,b:{bb:{bbb:2}},c:3}
 // obj1 === obj2 // false
 var clone = function(input) {
+  if (Array.isArray(input)) {
+    var result = [];
+    for (var i = 0; i < input.length; i++) {
+      if (typeof input[i] === 'object') {
+        result.push(clone(input[i]));
+      } else {
+        result.push(input[i]);
+      }
+    }
+  } else if (typeof input === 'object') {
+    var result = {};
+    for (var prop in input) {
+      if (typeof input[prop] === 'object') {
+        result[prop] = clone(input[prop]);
+      } else {
+        result[prop] = input[prop];
+      }
+    }
+  }
+  return result;
 };
